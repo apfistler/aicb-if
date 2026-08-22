@@ -17,7 +17,7 @@ connections:
 
   chromebook_to_vps:
     type: scp
-    host: www.adamfistler.com 
+    host: www.adamfistler.com
     port: 22
     user: apfistler
     identity_file: ~/.ssh/id_ed22519
