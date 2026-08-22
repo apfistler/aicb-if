@@ -33,3 +33,13 @@ class Config:
       raise KeyError(f"Unknown conversation: {name}")
 
     return self.conversations[name]
+
+  @property
+  def connections(self):
+    return self.data.get("connections", {})
+
+  def get_connection(self, name):
+    if name not in self.connections:
+      raise KeyError(f"Unknown connection: {name}")
+
+    return self.connections[name]

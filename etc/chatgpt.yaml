@@ -5,7 +5,20 @@ conversations:
     name: cc
     id: 6a84f807-c9fc-83ea-99b6-659673465b7c
 
-transport:
-  type: scp
-  destination: ...
-  context_path: ...
+connections:
+
+  vps_to_chromebook:
+    type: scp
+    host: localhost
+    port: 2222
+    user: apfistler
+    identity_file: ~/.ssh/id_ed22519
+    context_path: /tmp/chatgpt-context
+
+  chromebook_to_vps:
+    type: scp
+    host: www.adamfistler.com 
+    port: 22
+    user: apfistler
+    identity_file: ~/.ssh/id_ed22519
+    context_path: /tmp/chatgpt-context
