@@ -6,7 +6,6 @@ The project provides both **transmit** and **receive** functionality within a si
 
 ## Project Structure
 
-```text
 chatgpt-interface/
 ├── bin/
 │   └── chatgpt
@@ -24,13 +23,11 @@ chatgpt-interface/
 ├── README.md
 ├── LICENSE
 └── .gitignore
-```
 
 ## Architecture
 
 The project separates context, configuration, transport, and endpoint behavior.
 
-```text
                     chatgpt-interface
                            │
              ┌─────────────┴─────────────┐
@@ -44,7 +41,6 @@ The project separates context, configuration, transport, and endpoint behavior.
                                    Endpoint adapter
                                          │
                                    ChatGPT / Browser
-```
 
 ### Transmit
 
@@ -58,15 +54,11 @@ The transmit side is responsible for:
 
 Example:
 
-```bash
 cat parser.py | chatgpt cinnamon
-```
 
 If no conversation is specified, the configured default destination is used:
 
-```bash
 cat parser.py | chatgpt
-```
 
 ### Receive
 
@@ -83,15 +75,12 @@ The initial endpoint implementation uses Selenium and Chromium to interact with 
 
 Configuration is stored in:
 
-```text
 etc/chatgpt.yaml
-```
 
 Conversation names provide human-readable aliases for conversation identifiers.
 
 Example:
 
-```yaml
 default: current
 
 conversations:
@@ -104,7 +93,6 @@ conversations:
 
   noem:
     id: 12345678-90ab-cdef-1234-567890abcdef
-```
 
 The same configuration model is available to both transmit and receive components.
 
@@ -112,29 +100,19 @@ The same configuration model is available to both transmit and receive component
 
 The primary interface is:
 
-```text
 chatgpt [conversation]
-```
 
 Context is supplied through standard input.
 
 Examples:
 
-```bash
 echo "Hello" | chatgpt
-```
 
-```bash
 echo "Hello" | chatgpt cinnamon
-```
 
-```bash
 cat parser.py | chatgpt cinnamon
-```
 
-```bash
 grep -n "practice_areas" home.yaml | chatgpt
-```
 
 ## Context
 
@@ -198,15 +176,11 @@ Users should not need to remember implementation-specific identifiers.
 
 Instead of:
 
-```bash
 chatgpt 6a84f807-c9fc-83ea-99b6-659673465b7c
-```
 
 the preferred interface is:
 
-```bash
 chatgpt cinnamon
-```
 
 The configuration layer resolves the human-readable name to the underlying destination identifier.
 
@@ -228,7 +202,6 @@ The project is intended to run on multiple systems using the same source tree.
 
 For example:
 
-```text
 System A
 └── chatgpt-interface
     └── transmit
@@ -236,7 +209,6 @@ System A
 System B
 └── chatgpt-interface
     └── receive
-```
 
 Both systems use the same project while performing different roles.
 
