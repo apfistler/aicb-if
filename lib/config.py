@@ -9,7 +9,7 @@ class Config:
       filename = (
         Path(__file__).resolve().parent.parent
         / "etc"
-        / "chatgpt.yaml"
+        / "aicb.yaml"
       )
 
     self.filename = Path(filename)
@@ -22,17 +22,35 @@ class Config:
     return self.data.get("default")
 
   @property
-  def conversations(self):
-    return self.data.get("conversations", {})
+  def models(self):
+    return self.data.get("models", {})
 
-  def get_conversation(self, name=None):
+  def get_model(self, name=None):
+    if name is None:
+      name = "chatgpt"
+
+    if name not in self.models:
+      raise KeyError(f"Unknown model: {name}")
+
+    return self.models[name]
+
+  def get_conversations(self, model=None):
+    model_config = self.get_model(model)
+
+    return model_config.get("conversations", {})
+
+  def get_conversation(self, name=None, model=None):
     if name is None:
       name = self.default
 
-    if name not in self.conversations:
-      raise KeyError(f"Unknown conversation: {name}")
+    conversations = self.get_conversations(model)
 
-    return self.conversations[name]
+    if name not in conversations:
+      raise KeyError(
+        f"Unknown conversation: {name}"
+      )
+
+    return conversations[name]
 
   @property
   def connections(self):
@@ -40,6 +58,9 @@ class Config:
 
   def get_connection(self, name):
     if name not in self.connections:
-      raise KeyError(f"Unknown connection: {name}")
+      raise KeyError(
+        f"Unknown connection: {name}"
+      )
 
     return self.connections[name]
+
