@@ -4,3 +4,8 @@ conversations:
   current:
     name: cc
     id: 6a84f807-c9fc-83ea-99b6-659673465b7c
+
+transport:
+  type: scp
+  destination: ...
+  context_path: ...
