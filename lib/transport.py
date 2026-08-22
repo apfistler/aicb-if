@@ -12,6 +12,12 @@ class Transport:
   def receive(self, filename: str):
     raise NotImplementedError
 
+  def list(self):
+    raise NotImplementedError
+
+  def remove(self, filename: str):
+    raise NotImplementedError
+
 
 class SCPTransport(Transport):
   def __init__(self, connection):
@@ -91,4 +97,46 @@ class SCPTransport(Transport):
 
     return Context(
       destination.read_text(encoding="utf-8")
+    )
+
+  def list(self):
+    result = subprocess.run(
+      [
+        "ssh",
+        "-p",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        f"{self.user}@{self.host}",
+        f"find {self.context_path} "
+        f"-maxdepth 1 "
+        f"-type f "
+        f"-name 'context-*.txt' "
+        f"-printf '%f\\n'",
+      ],
+      capture_output=True,
+      text=True,
+      check=True,
+    )
+
+    return [
+      filename
+      for filename in result.stdout.splitlines()
+      if filename
+    ]
+
+  def remove(self, filename: str):
+    remote_path = f"{self.context_path}/{filename}"
+
+    subprocess.run(
+      [
+        "ssh",
+        "-p",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        f"{self.user}@{self.host}",
+        f"rm -f {remote_path}",
+      ],
+      check=True,
     )
