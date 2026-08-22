@@ -58,3 +58,38 @@ class SCPTransport(Transport):
       )
     finally:
       source_path.unlink(missing_ok=True)
+
+  def receive(self):
+    destination_path = self.context_path
+
+    destination_path.mkdir(
+      parents=True,
+      exist_ok=True
+    )
+
+    subprocess.run(
+      [
+        "scp",
+        "-P",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        f"{self.user}@{self.host}:{self.context_path}/*",
+        str(destination_path),
+      ],
+      check=True,
+    )
+
+    files = list(destination_path.glob("*.txt"))
+
+    if not files:
+      return None
+
+    latest = max(
+      files,
+      key=lambda path: path.stat().st_mtime
+    )
+
+    return Context(
+      latest.read_text(encoding="utf-8")
+    )
