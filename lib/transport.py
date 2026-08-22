@@ -6,7 +6,10 @@ from .context import Context
 
 
 class Transport:
-  def send(self, context: Context):
+  def send(self, context: Context, filename: str):
+    raise NotImplementedError
+
+  def receive(self, filename: str):
     raise NotImplementedError
 
 
@@ -26,7 +29,7 @@ class SCPTransport(Transport):
       connection["context_path"]
     )
 
-  def send(self, context: Context):
+  def send(self, context: Context, filename: str):
     if not isinstance(context, Context):
       raise TypeError("context must be a Context instance")
 
@@ -41,7 +44,8 @@ class SCPTransport(Transport):
 
     try:
       destination = (
-        f"{self.user}@{self.host}:{self.context_path}/"
+        f"{self.user}@{self.host}:"
+        f"{self.context_path}/{filename}"
       )
 
       subprocess.run(
@@ -59,13 +63,18 @@ class SCPTransport(Transport):
     finally:
       source_path.unlink(missing_ok=True)
 
-  def receive(self):
-    destination_path = self.context_path
-
-    destination_path.mkdir(
+  def receive(self, filename: str):
+    self.context_path.mkdir(
       parents=True,
       exist_ok=True
     )
+
+    source = (
+      f"{self.user}@{self.host}:"
+      f"{self.context_path}/{filename}"
+    )
+
+    destination = self.context_path / filename
 
     subprocess.run(
       [
@@ -74,22 +83,12 @@ class SCPTransport(Transport):
         str(self.port),
         "-i",
         str(self.identity_file),
-        f"{self.user}@{self.host}:{self.context_path}/*",
-        str(destination_path),
+        source,
+        str(destination),
       ],
       check=True,
     )
 
-    files = list(destination_path.glob("*.txt"))
-
-    if not files:
-      return None
-
-    latest = max(
-      files,
-      key=lambda path: path.stat().st_mtime
-    )
-
     return Context(
-      latest.read_text(encoding="utf-8")
+      destination.read_text(encoding="utf-8")
     )
