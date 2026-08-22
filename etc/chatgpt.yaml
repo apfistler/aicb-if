@@ -12,7 +12,7 @@ connections:
     host: localhost
     port: 2222
     user: apfistler
-    identity_file: ~/.ssh/id_ed22519
+    identity_file: ~/.ssh/id_ed25519_ssh
     context_path: /tmp/chatgpt-context
 
   chromebook_to_vps:
