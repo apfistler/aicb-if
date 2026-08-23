@@ -1,3 +1,7 @@
 endpoint:
   name: vps
   type: client
+
+  connections:
+    send: vps_to_chromebook
+    receive: chromebook_to_vps
