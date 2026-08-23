@@ -59,16 +59,13 @@ class ChatGPTBrowserModel(Model):
     print("========================")
     print()
 
-  def run(self):
-    print(
-      "ChatGPT browser model "
-      "waiting for requests..."
+    response = Response(
+      request=request,
+      content={
+        "type": "text",
+        "mime": "text/plain",
+        "data": "HELLO FROM THE CHROMEBOOK MODEL"
+      }
     )
 
-    while True:
-      request = self.receive()
-
-      if request is None:
-        continue
-
-      self.process(request)
+    self.send(response)
