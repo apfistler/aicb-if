@@ -8,15 +8,29 @@ class ChatGPTBrowserModel(Model):
   def __init__(
     self,
     config,
-    connection,
-    connections
+    connection
   ):
     self.config = config
     self.connection = connection
-    self.connections = connections
+
+    model_name = "chatgpt"
+
+    model_config = config.get_model(
+      model_name
+    )
+
+    connections = model_config[
+      "connections"
+    ]
 
     send_transport = connection.transport(
-      connections["send"]
+      connections["send"],
+      model=model_name
+    )
+
+    receive_transport = connection.transport(
+      connections["receive"],
+      model=model_name
     )
 
     self.transmitter = Transmitter(
@@ -24,9 +38,7 @@ class ChatGPTBrowserModel(Model):
     )
 
     self.queue = MessageQueue(
-      path="/tmp/chatgpt-context",
-      message_type="request",
-      interval=2
+      receive_transport
     )
 
   def send(self, message):
@@ -78,7 +90,9 @@ class ChatGPTBrowserModel(Model):
       }
     )
 
-    filename = self.send(response)
+    filename = self.send(
+      response
+    )
 
     print(
       f"response sent: {filename}"
@@ -98,22 +112,23 @@ class ChatGPTBrowserModel(Model):
       if request is None:
         continue
 
-      self.process(request)
+      self.process(
+        request
+      )
 
-  def wait_for_response(self, request_id):
-    queue = MessageQueue(
-      path="/tmp/chatgpt-context",
-      message_type="response",
-      interval=2
-    )
-
+  def wait_for_response(
+    self,
+    request_id
+  ):
     while True:
-      response = queue.receive()
+      response = self.queue.receive()
 
       if response is None:
         continue
 
-      if response.get("request_id") == request_id:
+      if response.get(
+        "request_id"
+      ) == request_id:
         return response
 
       print(

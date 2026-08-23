@@ -2,7 +2,11 @@ from .chatgpt import ChatGPTBrowserModel
 
 
 class Models:
-  def __init__(self, config, connection):
+  def __init__(
+    self,
+    config,
+    connection
+  ):
     self.config = config
     self.connection = connection
 
@@ -11,25 +15,21 @@ class Models:
       name=name
     )
 
-    provider = model_config.get("provider")
-    model_type = model_config.get("type")
-
-    endpoint = self.config.endpoint
-
-    connections = endpoint.get(
-      "connections"
+    provider = model_config.get(
+      "provider"
     )
 
-    if not connections:
-      raise ValueError(
-        "Endpoint has no connections configured"
-      )
+    model_type = model_config.get(
+      "type"
+    )
 
-    if provider == "chatgpt" and model_type == "browser":
+    if (
+      provider == "chatgpt"
+      and model_type == "browser"
+    ):
       return ChatGPTBrowserModel(
-        config=model_config,
-        connection=self.connection,
-        connections=connections
+        config=self.config,
+        connection=self.connection
       )
 
     raise NotImplementedError(
