@@ -28,7 +28,10 @@ class Config:
     if not filename.exists():
       return {}
 
-    with filename.open("r", encoding="utf-8") as f:
+    with filename.open(
+      "r",
+      encoding="utf-8"
+    ) as f:
       return yaml.safe_load(f) or {}
 
   def _merge(self, base, override):
@@ -58,15 +61,39 @@ class Config:
       self.local_filename
     )
 
-    return self._merge(base, local)
+    return self._merge(
+      base,
+      local
+    )
 
   @property
   def default(self):
     return self.data.get("default")
 
   @property
+  def log_dir(self):
+    configured = self.data.get(
+      "log_dir"
+    )
+
+    if configured:
+      return Path(
+        configured
+      ).expanduser()
+
+    return (
+      Path.home()
+      / ".local"
+      / "state"
+      / "aicb"
+    )
+
+  @property
   def models(self):
-    return self.data.get("models", {})
+    return self.data.get(
+      "models",
+      {}
+    )
 
   def get_model(self, name="chatgpt"):
     if name not in self.models:
@@ -76,7 +103,10 @@ class Config:
 
     return self.models[name]
 
-  def get_conversations(self, model="chatgpt"):
+  def get_conversations(
+    self,
+    model="chatgpt"
+  ):
     model_config = self.get_model(
       name=model
     )
@@ -131,7 +161,9 @@ class Config:
     return self.endpoint
 
   def get_endpoint_name(self):
-    name = self.endpoint.get("name")
+    name = self.endpoint.get(
+      "name"
+    )
 
     if name is None:
       raise KeyError(
@@ -141,7 +173,9 @@ class Config:
     return name
 
   def get_endpoint_type(self):
-    endpoint_type = self.endpoint.get("type")
+    endpoint_type = self.endpoint.get(
+      "type"
+    )
 
     if endpoint_type is None:
       raise KeyError(

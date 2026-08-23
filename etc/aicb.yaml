@@ -1,5 +1,7 @@
 default: current
 
+log_dir: log
+
 endpoint:
   name: vps
   type: client
