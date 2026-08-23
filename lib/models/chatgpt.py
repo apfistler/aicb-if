@@ -19,6 +19,7 @@ class ChatGPTBrowserModel(Model):
 
     self.queue = MessageQueue(
       path="/tmp/chatgpt-context",
+      message_type="request",
       interval=2
     )
 
