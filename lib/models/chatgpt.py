@@ -19,13 +19,12 @@ class ChatGPTBrowserModel(Model):
       {}
     )
 
-    send_transport = connection.transport(
-      connections["send"],
+    context_dir = config.get_context_dir(
       model=self.model_name
     )
 
-    receive_transport = connection.transport(
-      connections["receive"],
+    send_transport = connection.transport(
+      connections["send"],
       model=self.model_name
     )
 
@@ -34,13 +33,13 @@ class ChatGPTBrowserModel(Model):
     )
 
     self.request_queue = MessageQueue(
-      receive_transport,
+      path=context_dir,
       message_type="request",
       interval=2
     )
 
     self.response_queue = MessageQueue(
-      receive_transport,
+      path=context_dir,
       message_type="response",
       interval=2
     )
