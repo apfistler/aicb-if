@@ -6,3 +6,4 @@ touch lib/__init__.py
 venv/
 __pycache__/
 *.py[cod]
+log/
