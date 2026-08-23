@@ -19,9 +19,10 @@ class ChatGPTBrowserModel(Model):
       self.model_name
     )
 
-    connections = model_config[
-      "connections"
-    ]
+    connections = config.get_endpoint().get(
+      "connections",
+      {}
+    )
 
     context_dir = config.get_context_dir(
       self.model_name
