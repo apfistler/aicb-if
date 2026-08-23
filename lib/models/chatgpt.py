@@ -1,5 +1,7 @@
 from ..model import Model
 from ..queue import MessageQueue
+from ..protocol import Request, Response
+from ..transmit import Transmitter
 
 
 class ChatGPTBrowserModel(Model):
@@ -7,14 +9,27 @@ class ChatGPTBrowserModel(Model):
     self.config = config
     self.connection = connection
 
+    send_transport = connection.transport(
+      config["connections"]["send"]
+    )
+
+    self.transmitter = Transmitter(
+      send_transport
+    )
+
     self.queue = MessageQueue(
       path="/tmp/chatgpt-context",
       interval=2
     )
 
-  def send(self, response):
-    raise NotImplementedError(
-      "Response sending will be implemented next"
+  def send(self, request):
+    if not isinstance(request, Request):
+      raise TypeError(
+        "request must be a Request instance"
+      )
+
+    return self.transmitter.transmit(
+      request
     )
 
   def receive(self):
@@ -25,15 +40,30 @@ class ChatGPTBrowserModel(Model):
     print("=== REQUEST RECEIVED ===")
     print(f"id: {request['id']}")
     print(f"model: {request['model']}")
-    print(f"conversation: {request['conversation']}")
-    print(f"content type: {request['content']['type']}")
-    print(f"mime: {request['content']['mime']}")
-    print(f"content: {request['content']['data']}")
+    print(
+      f"conversation: "
+      f"{request['conversation']}"
+    )
+    print(
+      f"content type: "
+      f"{request['content']['type']}"
+    )
+    print(
+      f"mime: "
+      f"{request['content']['mime']}"
+    )
+    print(
+      f"content: "
+      f"{request['content']['data']}"
+    )
     print("========================")
     print()
 
   def run(self):
-    print("ChatGPT browser model waiting for requests...")
+    print(
+      "ChatGPT browser model "
+      "waiting for requests..."
+    )
 
     while True:
       request = self.receive()
