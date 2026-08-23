@@ -63,7 +63,7 @@ class ChatGPTBrowserModel(Model):
     print()
 
     response = Response(
-      request=request,
+      request_id=request["id"],
       content={
         "type": "text",
         "mime": "text/plain",
@@ -71,4 +71,24 @@ class ChatGPTBrowserModel(Model):
       }
     )
 
-    self.send(response)
+    filename = self.send(response)
+
+    print(
+      f"response sent: {filename}"
+    )
+
+    return response
+
+  def run(self):
+    print(
+      "ChatGPT browser model "
+      "waiting for requests..."
+    )
+
+    while True:
+      request = self.receive()
+
+      if request is None:
+        continue
+
+      self.process(request)
