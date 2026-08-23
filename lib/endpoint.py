@@ -21,9 +21,33 @@ class Endpoint:
     )
 
   def run_client(self):
-    raise NotImplementedError(
-      "Client endpoint is not implemented yet"
+    model = self.models.get(
+      name="chatgpt"
     )
+
+    print(
+      f"model: "
+      f"{model.__class__.__name__}"
+    )
+
+    content = input("> ")
+
+    if not content:
+      return None
+
+    context = Context(
+      content=content
+    )
+
+    filename = model.send(
+      context
+    )
+
+    print(
+      f"sent: {filename}"
+    )
+
+    return filename
 
   def run_model(self):
     model = self.models.get(
@@ -44,4 +68,6 @@ class Endpoint:
     print("received context:")
     print(context.content)
 
-    return model.process(context)
+    return model.process(
+      context
+    )
