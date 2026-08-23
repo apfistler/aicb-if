@@ -22,14 +22,17 @@ class ChatGPTBrowserModel(Model):
       interval=2
     )
 
-  def send(self, request):
-    if not isinstance(request, Request):
+  def send(self, message):
+    if not isinstance(
+      message,
+      (Request, Response)
+    ):
       raise TypeError(
-        "request must be a Request instance"
+        "message must be a Request or Response"
       )
 
     return self.transmitter.transmit(
-      request
+      message
     )
 
   def receive(self):
