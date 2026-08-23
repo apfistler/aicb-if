@@ -88,3 +88,27 @@ class Endpoint:
     )
 
     return model.run()
+
+  def run_daemon(self):
+    model = self.models.get(
+      name="chatgpt"
+    )
+
+    print(
+      f"model: "
+      f"{model.__class__.__name__}"
+    )
+
+    print(
+      "daemon: waiting for requests..."
+    )
+
+    while True:
+      request = model.receive()
+
+      if request is None:
+        continue
+
+      model.process(
+        request
+      )
