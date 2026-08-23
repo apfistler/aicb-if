@@ -1,5 +1,9 @@
 default: current
 
+endpoint:
+  name: vps
+  type: client
+
 models:
 
   chatgpt:

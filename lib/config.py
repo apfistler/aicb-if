@@ -64,3 +64,17 @@ class Config:
 
     return self.connections[name]
 
+  @property
+  def endpoint(self):
+    return self.data.get("endpoint", {})
+
+  def get_endpoint(self):
+    return self.endpoint
+
+  def get_endpoint_type(self):
+    endpoint_type = self.endpoint.get("type")
+
+    if endpoint_type is None:
+      raise KeyError("Endpoint type is not configured")
+
+    return endpoint_type

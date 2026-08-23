@@ -31,3 +31,13 @@ class ChatGPTBrowserModel(Model):
 
   def receive(self):
     return self.receiver.receive()
+
+  def process(self):
+    context = self.receive()
+
+    if context is None:
+      return None
+
+    raise NotImplementedError(
+      "ChatGPT browser processing is not implemented yet"
+    )

@@ -7,3 +7,6 @@ class Model:
 
   def receive(self):
     raise NotImplementedError
+
+  def process(self):
+    raise NotImplementedError
