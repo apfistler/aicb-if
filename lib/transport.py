@@ -2,20 +2,18 @@ from pathlib import Path
 import subprocess
 import tempfile
 
-from .context import Context
-
 
 class Transport:
-  def send(self, context: Context, filename: str):
+  def send(self, content, filename):
     raise NotImplementedError
 
-  def receive(self, filename: str):
+  def receive(self, filename):
     raise NotImplementedError
 
   def list(self):
     raise NotImplementedError
 
-  def remove(self, filename: str):
+  def remove(self, filename):
     raise NotImplementedError
 
 
@@ -35,38 +33,40 @@ class SCPTransport(Transport):
       connection["context_path"]
     )
 
-def send(self, content, filename):
-  with tempfile.NamedTemporaryFile(
-    mode="w",
-    encoding="utf-8",
-    suffix=".json",
-    delete=False
-  ) as f:
-    f.write(content)
-    source_path = Path(f.name)
+  def send(self, content, filename):
+    with tempfile.NamedTemporaryFile(
+      mode="w",
+      encoding="utf-8",
+      suffix=".json",
+      delete=False
+    ) as f:
+      f.write(content)
+      source_path = Path(f.name)
 
-  try:
-    destination = (
-      f"{self.user}@{self.host}:"
-      f"{self.context_path}/{filename}"
-    )
+    try:
+      destination = (
+        f"{self.user}@{self.host}:"
+        f"{self.context_path}/{filename}"
+      )
 
-    subprocess.run(
-      [
-        "scp",
-        "-P",
-        str(self.port),
-        "-i",
-        str(self.identity_file),
-        str(source_path),
-        destination,
-      ],
-      check=True,
-    )
-  finally:
-    source_path.unlink(missing_ok=True)
+      subprocess.run(
+        [
+          "scp",
+          "-P",
+          str(self.port),
+          "-i",
+          str(self.identity_file),
+          str(source_path),
+          destination,
+        ],
+        check=True,
+      )
+    finally:
+      source_path.unlink(
+        missing_ok=True
+      )
 
-  def receive(self, filename: str):
+  def receive(self, filename):
     self.context_path.mkdir(
       parents=True,
       exist_ok=True
@@ -77,7 +77,9 @@ def send(self, content, filename):
       f"{self.context_path}/{filename}"
     )
 
-    destination = self.context_path / filename
+    destination = (
+      self.context_path / filename
+    )
 
     subprocess.run(
       [
@@ -108,7 +110,7 @@ def send(self, content, filename):
         f"find {self.context_path} "
         f"-maxdepth 1 "
         f"-type f "
-        f"-name 'context-*.txt' "
+        f"-name '*.json' "
         f"-printf '%f\\n'",
       ],
       capture_output=True,
@@ -122,8 +124,10 @@ def send(self, content, filename):
       if filename
     ]
 
-  def remove(self, filename: str):
-    remote_path = f"{self.context_path}/{filename}"
+  def remove(self, filename):
+    remote_path = (
+      f"{self.context_path}/{filename}"
+    )
 
     subprocess.run(
       [
