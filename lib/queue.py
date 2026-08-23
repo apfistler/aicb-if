@@ -1,23 +1,51 @@
-from .protocol import loads
+from pathlib import Path
+import time
+
+from .protocol import dumps, loads
 
 
 class MessageQueue:
-  def __init__(self, transport):
-    self.transport = transport
+  def __init__(
+    self,
+    path,
+    message_type=None,
+    interval=2
+  ):
+    self.path = Path(
+      path
+    ).expanduser()
 
-  def send(self, message, filename=None):
+    self.message_type = message_type
+    self.interval = interval
+
+    self.path.mkdir(
+      parents=True,
+      exist_ok=True
+    )
+
+  def send(
+    self,
+    message,
+    filename=None
+  ):
     if filename is None:
       filename = self._filename(
         message
       )
 
-    return self.transport.send(
-      message,
-      filename
+    destination = (
+      self.path / filename
     )
 
+    destination.write_text(
+      dumps(message),
+      encoding="utf-8"
+    )
+
+    return filename
+
   def receive(self):
-    filenames = self.transport.list()
+    filenames = self.list()
 
     if not filenames:
       return None
@@ -26,39 +54,82 @@ class MessageQueue:
       filenames
     )[0]
 
-    data = self.transport.receive(
-      filename
+    path = (
+      self.path / filename
     )
 
     try:
-      message = loads(data)
+      data = path.read_text(
+        encoding="utf-8"
+      )
+
+      message = loads(
+        data
+      )
+
     except Exception:
-      self.transport.remove(
-        filename
+      path.unlink(
+        missing_ok=True
       )
       raise
 
-    self.transport.remove(
-      filename
+    path.unlink(
+      missing_ok=True
     )
 
     return message
 
+  def wait(self):
+    while True:
+      message = self.receive()
+
+      if message is not None:
+        return message
+
+      time.sleep(
+        self.interval
+      )
+
   def list(self):
-    return self.transport.list()
+    pattern = "*.json"
+
+    if self.message_type:
+      pattern = (
+        f"{self.message_type}-*.json"
+      )
+
+    return [
+      path.name
+      for path in self.path.glob(
+        pattern
+      )
+      if path.is_file()
+    ]
 
   def remove(self, filename):
-    return self.transport.remove(
-      filename
+    path = (
+      self.path / filename
+    )
+
+    path.unlink(
+      missing_ok=True
     )
 
   def _filename(self, message):
-    message_type = message.get(
+    if hasattr(
+      message,
+      "to_dict"
+    ):
+      data = message.to_dict()
+    else:
+      data = message
+
+    message_type = data.get(
       "type",
       "message"
     )
 
-    message_id = message.get(
+    message_id = data.get(
       "id",
       "unknown"
     )
@@ -66,4 +137,4 @@ class MessageQueue:
     return (
       f"{message_type}-"
       f"{message_id}.json"
-      )
+    )
