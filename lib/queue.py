@@ -37,9 +37,17 @@ class MessageQueue:
       self.path / filename
     )
 
-    destination.write_text(
+    temporary = (
+      self.path / f"{filename}.tmp"
+    )
+
+    temporary.write_text(
       dumps(message),
       encoding="utf-8"
+    )
+
+    temporary.replace(
+      destination
     )
 
     return filename
