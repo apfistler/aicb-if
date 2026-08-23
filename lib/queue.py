@@ -1,49 +1,42 @@
 from pathlib import Path
+import json
+import time
 
-from .context import Context
 
-
-class Queue:
-  def __init__(self, path):
+class MessageQueue:
+  def __init__(
+    self,
+    path="/tmp/chatgpt-context",
+    interval=2
+  ):
     self.path = Path(path)
+    self.interval = interval
+
+  def receive(self):
     self.path.mkdir(
       parents=True,
       exist_ok=True
     )
 
-  def put(self, context, filename):
-    if not isinstance(context, Context):
-      raise TypeError(
-        "context must be a Context instance"
+    while True:
+      files = sorted(
+        self.path.glob("*.json")
       )
 
-    destination = self.path / filename
+      if files:
+        filename = files[0]
 
-    destination.write_text(
-      context.content,
-      encoding="utf-8"
-    )
+        try:
+          message = json.loads(
+            filename.read_text(
+              encoding="utf-8"
+            )
+          )
+        finally:
+          filename.unlink(
+            missing_ok=True
+          )
 
-    return filename
+        return message
 
-  def list(self):
-    return sorted(
-      path.name
-      for path in self.path.glob(
-        "context-*.txt"
-      )
-      if path.is_file()
-    )
-
-  def get(self, filename):
-    path = self.path / filename
-
-    return Context(
-      path.read_text(
-        encoding="utf-8"
-      )
-    )
-
-  def remove(self, filename):
-    path = self.path / filename
-    path.unlink(missing_ok=True)
+      time.sleep(self.interval)
