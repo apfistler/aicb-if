@@ -1,4 +1,4 @@
-from .context import Context
+from .protocol import Request
 
 
 class Endpoint:
@@ -35,12 +35,16 @@ class Endpoint:
     if not content:
       return None
 
-    context = Context(
-      content=content
+    request = Request(
+      content={
+        "type": "text",
+        "mime": "text/plain",
+        "data": content
+      }
     )
 
     filename = model.send(
-      context
+      request
     )
 
     print(
