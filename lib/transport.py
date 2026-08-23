@@ -1,10 +1,18 @@
 from pathlib import Path
 import subprocess
-import tempfile
 
 
 class Transport:
   def send(self, content, filename):
+    raise NotImplementedError
+
+  def receive(self, filename):
+    raise NotImplementedError
+
+  def list(self):
+    raise NotImplementedError
+
+  def remove(self, filename):
     raise NotImplementedError
 
 
@@ -29,21 +37,42 @@ class SCPTransport(Transport):
     ).expanduser()
 
   def send(self, content, filename):
-    with tempfile.NamedTemporaryFile(
-      mode="w",
-      encoding="utf-8",
-      suffix=".json",
-      delete=False
-    ) as f:
-      f.write(content)
-      source_path = Path(f.name)
+    source_path = (
+      self.context_dir / filename
+    )
+
+    temporary_name = (
+      f"{filename}.tmp"
+    )
+
+    temporary_path = (
+      self.context_dir / temporary_name
+    )
+
+    self.context_dir.mkdir(
+      parents=True,
+      exist_ok=True
+    )
+
+    temporary_path.write_text(
+      content,
+      encoding="utf-8"
+    )
+
+    remote_temporary = (
+      f"{self.context_dir}/{temporary_name}"
+    )
+
+    remote_destination = (
+      f"{self.context_dir}/{filename}"
+    )
+
+    destination = (
+      f"{self.user}@{self.host}:"
+      f"{remote_temporary}"
+    )
 
     try:
-      destination = (
-        f"{self.user}@{self.host}:"
-        f"{self.context_dir}/{filename}"
-      )
-
       subprocess.run(
         [
           "scp",
@@ -51,12 +80,106 @@ class SCPTransport(Transport):
           str(self.port),
           "-i",
           str(self.identity_file),
-          str(source_path),
+          str(temporary_path),
           destination,
         ],
         check=True,
       )
+
+      subprocess.run(
+        [
+          "ssh",
+          "-p",
+          str(self.port),
+          "-i",
+          str(self.identity_file),
+          f"{self.user}@{self.host}",
+          "mv",
+          remote_temporary,
+          remote_destination,
+        ],
+        check=True,
+      )
+
     finally:
-      source_path.unlink(
+      temporary_path.unlink(
         missing_ok=True
       )
+
+  def receive(self, filename):
+    self.context_dir.mkdir(
+      parents=True,
+      exist_ok=True
+    )
+
+    source = (
+      f"{self.user}@{self.host}:"
+      f"{self.context_dir}/{filename}"
+    )
+
+    destination = (
+      self.context_dir / filename
+    )
+
+    subprocess.run(
+      [
+        "scp",
+        "-P",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        source,
+        str(destination),
+      ],
+      check=True,
+    )
+
+    return destination.read_text(
+      encoding="utf-8"
+    )
+
+  def list(self):
+    result = subprocess.run(
+      [
+        "ssh",
+        "-p",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        f"{self.user}@{self.host}",
+        f"find {self.context_dir} "
+        f"-maxdepth 1 "
+        f"-type f "
+        f"-name '*.json' "
+        f"-printf '%f\\n'",
+      ],
+      capture_output=True,
+      text=True,
+      check=True,
+    )
+
+    return [
+      filename
+      for filename in result.stdout.splitlines()
+      if filename
+    ]
+
+  def remove(self, filename):
+    remote_path = (
+      f"{self.context_dir}/{filename}"
+    )
+
+    subprocess.run(
+      [
+        "ssh",
+        "-p",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        f"{self.user}@{self.host}",
+        "rm",
+        "-f",
+        remote_path,
+      ],
+      check=True,
+    )
