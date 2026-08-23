@@ -8,5 +8,5 @@ class Model:
   def receive(self):
     raise NotImplementedError
 
-  def process(self):
+  def process(self, context: Context):
     raise NotImplementedError
