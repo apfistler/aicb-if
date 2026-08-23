@@ -1,5 +1,6 @@
 import sys
 
+from .backend import Backend
 from .logger import Logger
 from .protocol import Request
 
@@ -18,8 +19,8 @@ class Endpoint:
     if endpoint_type == "client":
       return self.run_client()
 
-    if endpoint_type == "model":
-      return self.run_model()
+    if endpoint_type == "backend":
+      return self.run_backend()
 
     raise ValueError(
       f"Unsupported endpoint type: "
@@ -110,7 +111,7 @@ class Endpoint:
 
     return input("> ")
 
-  def run_model(self):
+  def run_backend(self):
     model = self.models.get(
       name="chatgpt"
     )
@@ -120,33 +121,10 @@ class Endpoint:
       f"{model.__class__.__name__}"
     )
 
-    return model.run()
-
-  def run_daemon(self):
-    model = self.models.get(
-      name="chatgpt"
+    backend = Backend(
+      queue=model.request_queue,
+      processor=model,
+      logger=self.logger
     )
 
-    self.logger.info(
-      f"model: "
-      f"{model.__class__.__name__}"
-    )
-
-    self.logger.info(
-      "daemon: waiting for requests..."
-    )
-
-    while True:
-      request = model.receive()
-
-      if request is None:
-        continue
-
-      self.logger.info(
-        f"request received: "
-        f"{request.get('id')}"
-      )
-
-      model.process(
-        request
-      )
+    return backend.run()
