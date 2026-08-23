@@ -13,32 +13,39 @@ class ChatGPTBrowserModel(Model):
     self.config = config
     self.connection = connection
 
-    model_name = "chatgpt"
+    self.model_name = "chatgpt"
 
     model_config = config.get_model(
-      model_name
+      self.model_name
     )
 
     connections = model_config[
       "connections"
     ]
 
-    send_transport = connection.transport(
-      connections["send"],
-      model=model_name
+    context_dir = config.get_context_dir(
+      self.model_name
     )
 
-    receive_transport = connection.transport(
-      connections["receive"],
-      model=model_name
+    send_transport = connection.transport(
+      connections["send"],
+      model=self.model_name
     )
 
     self.transmitter = Transmitter(
       send_transport
     )
 
-    self.queue = MessageQueue(
-      receive_transport
+    self.request_queue = MessageQueue(
+      path=context_dir,
+      message_type="request",
+      interval=2
+    )
+
+    self.response_queue = MessageQueue(
+      path=context_dir,
+      message_type="response",
+      interval=2
     )
 
   def send(self, message):
@@ -55,13 +62,40 @@ class ChatGPTBrowserModel(Model):
     )
 
   def receive(self):
-    return self.queue.receive()
+    return self.request_queue.receive()
+
+  def wait_for_request(self):
+    return self.request_queue.wait()
+
+  def wait_for_response(
+    self,
+    request_id
+  ):
+    while True:
+      response = self.response_queue.receive()
+
+      if response is None:
+        continue
+
+      if response.get(
+        "request_id"
+      ) == request_id:
+        return response
+
+      print(
+        f"ignoring response for "
+        f"{response.get('request_id')}"
+      )
 
   def process(self, request):
     print()
     print("=== REQUEST RECEIVED ===")
-    print(f"id: {request['id']}")
-    print(f"model: {request['model']}")
+    print(
+      f"id: {request['id']}"
+    )
+    print(
+      f"model: {request['model']}"
+    )
     print(
       f"conversation: "
       f"{request['conversation']}"
@@ -86,7 +120,9 @@ class ChatGPTBrowserModel(Model):
       content={
         "type": "text",
         "mime": "text/plain",
-        "data": "HELLO FROM THE CHROMEBOOK MODEL"
+        "data": (
+          "HELLO FROM THE CHROMEBOOK MODEL"
+        )
       }
     )
 
@@ -107,31 +143,8 @@ class ChatGPTBrowserModel(Model):
     )
 
     while True:
-      request = self.receive()
-
-      if request is None:
-        continue
+      request = self.wait_for_request()
 
       self.process(
         request
-      )
-
-  def wait_for_response(
-    self,
-    request_id
-  ):
-    while True:
-      response = self.queue.receive()
-
-      if response is None:
-        continue
-
-      if response.get(
-        "request_id"
-      ) == request_id:
-        return response
-
-      print(
-        f"ignoring response for "
-        f"{response.get('request_id')}"
       )
