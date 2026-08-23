@@ -6,6 +6,10 @@ models:
     provider: chatgpt
     type: browser
 
+    connections:
+      send: vps_to_chromebook
+      receive: chromebook_to_vps
+
     conversations:
       current:
         name: cc
