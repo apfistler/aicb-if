@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from lib.config import Config
+from lib.connection import Connection
+from lib.models import Models
+
+
+def main():
+  parser = argparse.ArgumentParser(
+    prog="aicb",
+    description="AI chat interface"
+  )
+
+  parser.add_argument(
+    "--config",
+    metavar="FILE",
+    help="configuration file"
+  )
+
+  args = parser.parse_args()
+
+  config = Config(
+    filename=args.config
+  )
+
+  print(
+    f"endpoint: "
+    f"{config.get_endpoint_name()}"
+  )
+
+  print(
+    f"type: "
+    f"{config.get_endpoint_type()}"
+  )
+
+  connection = Connection(config)
+
+  models = Models(
+    config=config,
+    connection=connection
+  )
+
+  model = models.get(
+    name="chatgpt"
+  )
+
+  print(
+    f"model: "
+    f"{model.__class__.__name__}"
+  )
+
+
+if __name__ == "__main__":
+  main()
