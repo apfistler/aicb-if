@@ -1,5 +1,6 @@
 import sys
 
+from .logger import Logger
 from .protocol import Request
 
 
@@ -7,6 +8,9 @@ class Endpoint:
   def __init__(self, config, models):
     self.config = config
     self.models = models
+    self.logger = Logger(
+      config.log_dir
+    )
 
   def run(self):
     endpoint_type = self.config.get_endpoint_type()
@@ -27,7 +31,7 @@ class Endpoint:
       name="chatgpt"
     )
 
-    print(
+    self.logger.info(
       f"model: "
       f"{model.__class__.__name__}"
     )
@@ -37,6 +41,10 @@ class Endpoint:
     if not content:
       return None
 
+    self.logger.info(
+      f"input: {len(content)} bytes"
+    )
+
     request = Request(
       content={
         "type": "text",
@@ -45,11 +53,15 @@ class Endpoint:
       }
     )
 
+    self.logger.info(
+      f"request: {request.id}"
+    )
+
     filename = model.send(
       request
     )
 
-    print(
+    self.logger.info(
       f"sent: {filename}"
     )
 
@@ -57,8 +69,10 @@ class Endpoint:
       request.id
     )
 
-    print()
-    print("=== RESPONSE ===")
+    self.logger.info(
+      f"received response: "
+      f"{response.get('id')}"
+    )
 
     response_content = response.get(
       "content",
@@ -66,16 +80,22 @@ class Endpoint:
     )
 
     if response_content.get("type") == "text":
-      print(
-        response_content.get(
-          "data",
-          ""
-        )
+      output = response_content.get(
+        "data",
+        ""
+      )
+
+      print(output)
+
+      self.logger.info(
+        f"response: {len(output)} bytes"
       )
     else:
       print(response_content)
 
-    print("================")
+      self.logger.info(
+        "response: non-text content"
+      )
 
     return response
 
@@ -95,7 +115,7 @@ class Endpoint:
       name="chatgpt"
     )
 
-    print(
+    self.logger.info(
       f"model: "
       f"{model.__class__.__name__}"
     )
@@ -107,12 +127,12 @@ class Endpoint:
       name="chatgpt"
     )
 
-    print(
+    self.logger.info(
       f"model: "
       f"{model.__class__.__name__}"
     )
 
-    print(
+    self.logger.info(
       "daemon: waiting for requests..."
     )
 
@@ -122,6 +142,11 @@ class Endpoint:
       if request is None:
         continue
 
+      self.logger.info(
+        f"request received: "
+        f"{request.get('id')}"
+      )
+
       model.process(
         request
-        )
+      )
