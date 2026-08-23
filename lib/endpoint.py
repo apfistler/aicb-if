@@ -1,3 +1,5 @@
+import sys
+
 from .protocol import Request
 
 
@@ -30,7 +32,7 @@ class Endpoint:
       f"{model.__class__.__name__}"
     )
 
-    content = input("> ")
+    content = self.get_input()
 
     if not content:
       return None
@@ -77,6 +79,17 @@ class Endpoint:
 
     return response
 
+  def get_input(self):
+    if len(sys.argv) > 1:
+      return " ".join(
+        sys.argv[1:]
+      )
+
+    if not sys.stdin.isatty():
+      return sys.stdin.read()
+
+    return input("> ")
+
   def run_model(self):
     model = self.models.get(
       name="chatgpt"
@@ -111,4 +124,4 @@ class Endpoint:
 
       model.process(
         request
-      )
+        )
