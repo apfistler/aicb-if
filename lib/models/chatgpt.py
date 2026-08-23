@@ -2,9 +2,13 @@ from ..model import Model
 from ..queue import MessageQueue
 from ..protocol import Request, Response
 from ..transmit import Transmitter
+from ..processor import Processor
 
 
-class ChatGPTBrowserModel(Model):
+class ChatGPTBrowserModel(
+  Model,
+  Processor
+):
   def __init__(
     self,
     config,
