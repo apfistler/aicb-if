@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+sys.path.insert(
+  0,
+  str(PROJECT_ROOT)
+)
+
 from lib.config import Config
 from lib.connection import Connection
 from lib.models import Models
@@ -23,7 +33,7 @@ def main():
     models
   )
 
-  endpoint.run_daemon()
+  endpoint.run()
 
 
 if __name__ == "__main__":
