@@ -1,61 +1,69 @@
-from pathlib import Path
-import json
-import time
+from .protocol import loads
 
 
 class MessageQueue:
-  def __init__(
-    self,
-    path="/tmp/chatgpt-context",
-    message_type=None,
-    interval=2
-  ):
-    self.path = Path(path)
-    self.message_type = message_type
-    self.interval = interval
+  def __init__(self, transport):
+    self.transport = transport
 
-  def receive(self):
-    self.path.mkdir(
-      parents=True,
-      exist_ok=True
+  def send(self, message, filename=None):
+    if filename is None:
+      filename = self._filename(
+        message
+      )
+
+    return self.transport.send(
+      message,
+      filename
     )
 
-    while True:
-      files = sorted(
-        self.path.glob("*.json")
+  def receive(self):
+    filenames = self.transport.list()
+
+    if not filenames:
+      return None
+
+    filename = sorted(
+      filenames
+    )[0]
+
+    data = self.transport.receive(
+      filename
+    )
+
+    try:
+      message = loads(data)
+    except Exception:
+      self.transport.remove(
+        filename
       )
+      raise
 
-      for filename in files:
-        try:
-          message = json.loads(
-            filename.read_text(
-              encoding="utf-8"
-            )
-          )
-        except (
-          json.JSONDecodeError,
-          OSError
-        ):
-          continue
+    self.transport.remove(
+      filename
+    )
 
-        if (
-          self.message_type is not None
-          and message.get("type")
-          != self.message_type
-        ):
-          continue
+    return message
 
-        filename.unlink(
-          missing_ok=True
-        )
+  def list(self):
+    return self.transport.list()
 
-        return message
+  def remove(self, filename):
+    return self.transport.remove(
+      filename
+    )
 
-      print(
-        "waiting...",
-        flush=True
-      )
+  def _filename(self, message):
+    message_type = message.get(
+      "type",
+      "message"
+    )
 
-      time.sleep(
-        self.interval
+    message_id = message.get(
+      "id",
+      "unknown"
+    )
+
+    return (
+      f"{message_type}-"
+      f"{message_id}.json"
       )

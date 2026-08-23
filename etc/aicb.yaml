@@ -1,6 +1,7 @@
 default: current
 
 log_dir: log
+context_dir: /tmp/{model}-context
 
 endpoint:
   name: vps
@@ -29,7 +30,6 @@ connections:
     port: 2222
     user: apfistler
     identity_file: ~/.ssh/id_ed25519_ssh
-    context_path: /tmp/chatgpt-context
 
   chromebook_to_vps:
     type: scp
@@ -37,4 +37,3 @@ connections:
     port: 22
     user: apfistler
     identity_file: ~/.ssh/id_ed22519
-    context_path: /tmp/chatgpt-context

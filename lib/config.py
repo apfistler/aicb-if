@@ -68,7 +68,9 @@ class Config:
 
   @property
   def default(self):
-    return self.data.get("default")
+    return self.data.get(
+      "default"
+    )
 
   @property
   def log_dir(self):
@@ -88,6 +90,25 @@ class Config:
       / "aicb"
     )
 
+  def get_context_dir(
+    self,
+    model="chatgpt"
+  ):
+    configured = self.data.get(
+      "context_dir"
+    )
+
+    if configured:
+      return Path(
+        configured.format(
+          model=model
+        )
+      ).expanduser()
+
+    return Path(
+      f"/tmp/{model}-context"
+    )
+
   @property
   def models(self):
     return self.data.get(
@@ -95,7 +116,10 @@ class Config:
       {}
     )
 
-  def get_model(self, name="chatgpt"):
+  def get_model(
+    self,
+    name="chatgpt"
+  ):
     if name not in self.models:
       raise KeyError(
         f"Unknown model: {name}"
@@ -142,7 +166,10 @@ class Config:
       {}
     )
 
-  def get_connection(self, name):
+  def get_connection(
+    self,
+    name
+  ):
     if name not in self.connections:
       raise KeyError(
         f"Unknown connection: {name}"
