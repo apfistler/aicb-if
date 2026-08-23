@@ -12,12 +12,7 @@ class ChatGPTBrowserModel(Model):
   ):
     self.config = config
     self.connection = connection
-
     self.model_name = "chatgpt"
-
-    model_config = config.get_model(
-      self.model_name
-    )
 
     connections = config.get_endpoint().get(
       "connections",
@@ -26,6 +21,11 @@ class ChatGPTBrowserModel(Model):
 
     send_transport = connection.transport(
       connections["send"],
+      model=self.model_name
+    )
+
+    receive_transport = connection.transport(
+      connections["receive"],
       model=self.model_name
     )
 
@@ -132,16 +132,3 @@ class ChatGPTBrowserModel(Model):
     )
 
     return response
-
-  def run(self):
-    print(
-      "ChatGPT browser model "
-      "waiting for requests..."
-    )
-
-    while True:
-      request = self.wait_for_request()
-
-      self.process(
-        request
-      )

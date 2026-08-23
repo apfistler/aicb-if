@@ -11,29 +11,12 @@ class Models:
     self.connection = connection
 
   def get(self, name):
-    model_config = self.config.get_model(
-      name=name
-    )
-
-    provider = model_config.get(
-      "provider"
-    )
-
-    model_type = model_config.get(
-      "type"
-    )
-
-    if (
-      provider == "chatgpt"
-      and model_type == "browser"
-    ):
+    if name == "chatgpt":
       return ChatGPTBrowserModel(
-        config=self.config,
-        connection=self.connection
+        self.config,
+        self.connection
       )
 
-    raise NotImplementedError(
-      f"No model implementation for "
-      f"provider={provider!r}, "
-      f"type={model_type!r}"
+    raise ValueError(
+      f"Unsupported model: {name}"
     )
