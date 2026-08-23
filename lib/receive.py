@@ -1,30 +1,22 @@
-def send(self, content, filename):
-  with tempfile.NamedTemporaryFile(
-    mode="w",
-    encoding="utf-8",
-    suffix=".json",
-    delete=False
-  ) as f:
-    f.write(content)
-    source_path = Path(f.name)
+import json
 
-  try:
-    destination = (
-      f"{self.user}@{self.host}:"
-      f"{self.context_path}/{filename}"
+
+class Receiver:
+  def __init__(self, transport):
+    self.transport = transport
+
+  def receive(self):
+    filenames = self.transport.list()
+
+    if not filenames:
+      return None
+
+    filename = sorted(filenames)[0]
+
+    content = self.transport.receive(
+      filename
     )
 
-    subprocess.run(
-      [
-        "scp",
-        "-P",
-        str(self.port),
-        "-i",
-        str(self.identity_file),
-        str(source_path),
-        destination,
-      ],
-      check=True,
-    )
-  finally:
-    source_path.unlink(missing_ok=True)
+    self.transport.remove(filename)
+
+    return json.loads(content)
