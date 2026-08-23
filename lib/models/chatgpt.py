@@ -38,6 +38,13 @@ class ChatGPTBrowserModel(Model):
         "context must be a Context instance"
       )
 
-    raise NotImplementedError(
-      "ChatGPT browser processing is not implemented yet"
+    response = Context(
+      content=(
+        "ChatGPT browser model received:\n\n"
+        + context.content
+      )
     )
+
+    self.send(response)
+
+    return response

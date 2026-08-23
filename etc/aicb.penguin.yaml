@@ -1,3 +1,7 @@
 endpoint:
   name: chromebook
   type: model
+
+connections:
+  send: chromebook_to_vps
+  receive: vps_to_chromebook
