@@ -59,15 +59,4 @@ class Endpoint:
       f"{model.__class__.__name__}"
     )
 
-    context = model.receive()
-
-    if context is None:
-      print("no pending context")
-      return None
-
-    print("received context:")
-    print(context.content)
-
-    return model.process(
-      context
-    )
+    return model.run()

@@ -1,50 +1,44 @@
-from ..context import Context
 from ..model import Model
-from ..transmit import Transmitter
-from ..receive import Receiver
+from ..queue import MessageQueue
 
 
 class ChatGPTBrowserModel(Model):
   def __init__(self, config, connection):
     self.config = config
+    self.connection = connection
 
-    send_transport = connection.transport(
-      config["connections"]["send"]
+    self.queue = MessageQueue(
+      path="/tmp/chatgpt-context",
+      interval=2
     )
 
-    receive_transport = connection.transport(
-      config["connections"]["receive"]
-    )
-
-    self.transmitter = Transmitter(
-      send_transport
-    )
-
-    self.receiver = Receiver(
-      receive_transport
-    )
-
-  def send(self, context: Context):
-    return self.transmitter.transmit(
-      context
+  def send(self, response):
+    raise NotImplementedError(
+      "Response sending will be implemented next"
     )
 
   def receive(self):
-    return self.receiver.receive()
+    return self.queue.receive()
 
-  def process(self, context: Context):
-    if not isinstance(context, Context):
-      raise TypeError(
-        "context must be a Context instance"
-      )
+  def process(self, request):
+    print()
+    print("=== REQUEST RECEIVED ===")
+    print(f"id: {request['id']}")
+    print(f"model: {request['model']}")
+    print(f"conversation: {request['conversation']}")
+    print(f"content type: {request['content']['type']}")
+    print(f"mime: {request['content']['mime']}")
+    print(f"content: {request['content']['data']}")
+    print("========================")
+    print()
 
-    response = Context(
-      content=(
-        "ChatGPT browser model received:\n\n"
-        + context.content
-      )
-    )
+  def run(self):
+    print("ChatGPT browser model waiting for requests...")
 
-    self.send(response)
+    while True:
+      request = self.receive()
 
-    return response
+      if request is None:
+        continue
+
+      self.process(request)
