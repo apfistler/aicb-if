@@ -35,39 +35,36 @@ class SCPTransport(Transport):
       connection["context_path"]
     )
 
-  def send(self, context: Context, filename: str):
-    if not isinstance(context, Context):
-      raise TypeError("context must be a Context instance")
+def send(self, content, filename):
+  with tempfile.NamedTemporaryFile(
+    mode="w",
+    encoding="utf-8",
+    suffix=".json",
+    delete=False
+  ) as f:
+    f.write(content)
+    source_path = Path(f.name)
 
-    with tempfile.NamedTemporaryFile(
-      mode="w",
-      encoding="utf-8",
-      suffix=".txt",
-      delete=False
-    ) as f:
-      f.write(context.content)
-      source_path = Path(f.name)
+  try:
+    destination = (
+      f"{self.user}@{self.host}:"
+      f"{self.context_path}/{filename}"
+    )
 
-    try:
-      destination = (
-        f"{self.user}@{self.host}:"
-        f"{self.context_path}/{filename}"
-      )
-
-      subprocess.run(
-        [
-          "scp",
-          "-P",
-          str(self.port),
-          "-i",
-          str(self.identity_file),
-          str(source_path),
-          destination,
-        ],
-        check=True,
-      )
-    finally:
-      source_path.unlink(missing_ok=True)
+    subprocess.run(
+      [
+        "scp",
+        "-P",
+        str(self.port),
+        "-i",
+        str(self.identity_file),
+        str(source_path),
+        destination,
+      ],
+      check=True,
+    )
+  finally:
+    source_path.unlink(missing_ok=True)
 
   def receive(self, filename: str):
     self.context_path.mkdir(
@@ -95,8 +92,8 @@ class SCPTransport(Transport):
       check=True,
     )
 
-    return Context(
-      destination.read_text(encoding="utf-8")
+    return destination.read_text(
+      encoding="utf-8"
     )
 
   def list(self):
