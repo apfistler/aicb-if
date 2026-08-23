@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(
+  __file__
+).resolve().parent.parent
+
+sys.path.insert(
+  0,
+  str(PROJECT_ROOT)
+)
+
+from lib.config import Config
+from lib.connection import Connection
+from lib.models import Models
+from lib.endpoint import Endpoint
+
+
+def main():
+  config = Config()
+
+  connection = Connection(
+    config
+  )
+
+  models = Models(
+    config,
+    connection
+  )
+
+  endpoint = Endpoint(
+    config,
+    models
+  )
+
+  endpoint.run_backend()
+
+
+if __name__ == "__main__":
+  main()
