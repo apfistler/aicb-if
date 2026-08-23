@@ -1,18 +1,27 @@
+from pathlib import Path
 import time
 
-from .protocol import loads
+from .protocol import dumps, loads
 
 
 class MessageQueue:
   def __init__(
     self,
-    transport,
+    path,
     message_type=None,
     interval=2
   ):
-    self.transport = transport
+    self.path = Path(
+      path
+    ).expanduser()
+
     self.message_type = message_type
     self.interval = interval
+
+    self.path.mkdir(
+      parents=True,
+      exist_ok=True
+    )
 
   def send(
     self,
@@ -24,10 +33,16 @@ class MessageQueue:
         message
       )
 
-    return self.transport.send(
-      message,
-      filename
+    destination = (
+      self.path / filename
     )
+
+    destination.write_text(
+      dumps(message),
+      encoding="utf-8"
+    )
+
+    return filename
 
   def receive(self):
     filenames = self.list()
@@ -39,22 +54,27 @@ class MessageQueue:
       filenames
     )[0]
 
-    data = self.transport.receive(
-      filename
+    path = (
+      self.path / filename
     )
 
     try:
+      data = path.read_text(
+        encoding="utf-8"
+      )
+
       message = loads(
         data
       )
+
     except Exception:
-      self.transport.remove(
-        filename
+      path.unlink(
+        missing_ok=True
       )
       raise
 
-    self.transport.remove(
-      filename
+    path.unlink(
+      missing_ok=True
     )
 
     return message
@@ -71,24 +91,28 @@ class MessageQueue:
       )
 
   def list(self):
-    filenames = self.transport.list()
+    pattern = "*.json"
 
-    if self.message_type is None:
-      return filenames
-
-    prefix = (
-      f"{self.message_type}-"
-    )
+    if self.message_type:
+      pattern = (
+        f"{self.message_type}-*.json"
+      )
 
     return [
-      filename
-      for filename in filenames
-      if filename.startswith(prefix)
+      path.name
+      for path in self.path.glob(
+        pattern
+      )
+      if path.is_file()
     ]
 
   def remove(self, filename):
-    return self.transport.remove(
-      filename
+    path = (
+      self.path / filename
+    )
+
+    path.unlink(
+      missing_ok=True
     )
 
   def _filename(self, message):
