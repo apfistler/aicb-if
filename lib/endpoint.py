@@ -51,7 +51,31 @@ class Endpoint:
       f"sent: {filename}"
     )
 
-    return filename
+    response = model.wait_for_response(
+      request.id
+    )
+
+    print()
+    print("=== RESPONSE ===")
+
+    response_content = response.get(
+      "content",
+      {}
+    )
+
+    if response_content.get("type") == "text":
+      print(
+        response_content.get(
+          "data",
+          ""
+        )
+      )
+    else:
+      print(response_content)
+
+    print("================")
+
+    return response
 
   def run_model(self):
     model = self.models.get(

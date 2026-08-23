@@ -99,3 +99,24 @@ class ChatGPTBrowserModel(Model):
         continue
 
       self.process(request)
+
+  def wait_for_response(self, request_id):
+    queue = MessageQueue(
+      path="/tmp/chatgpt-context",
+      message_type="response",
+      interval=2
+    )
+
+    while True:
+      response = queue.receive()
+
+      if response is None:
+        continue
+
+      if response.get("request_id") == request_id:
+        return response
+
+      print(
+        f"ignoring response for "
+        f"{response.get('request_id')}"
+      )
