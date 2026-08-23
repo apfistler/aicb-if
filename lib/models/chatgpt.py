@@ -5,12 +5,18 @@ from ..transmit import Transmitter
 
 
 class ChatGPTBrowserModel(Model):
-  def __init__(self, config, connection):
+  def __init__(
+    self,
+    config,
+    connection,
+    connections
+  ):
     self.config = config
     self.connection = connection
+    self.connections = connections
 
     send_transport = connection.transport(
-      config["connections"]["send"]
+      connections["send"]
     )
 
     self.transmitter = Transmitter(
