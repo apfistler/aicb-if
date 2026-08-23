@@ -1,6 +1,3 @@
-from .logger import Logger
-
-
 class Backend:
   def __init__(
     self,
@@ -18,10 +15,7 @@ class Backend:
     )
 
     while True:
-      request = self.queue.receive()
-
-      if request is None:
-        continue
+      request = self.queue.wait()
 
       self.logger.info(
         f"request received: "
